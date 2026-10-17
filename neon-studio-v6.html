@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neon RGBIC Studio v6 - Ultimate Govee & Sound FX</title>
+  <style>
+    :root {
+      --bg: #040508;
+      --card-bg: rgba(12, 14, 22, 0.94);
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #00ffcc;
+      --accent-glow: rgba(0, 255, 204, 0.35);
+      --purple: #b829ff;
+      --pink: #ff007f;
+      --text: #f0f4f8;
+      --text-muted: #8b9bb4;
+      --danger: #ff3366;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      background-color: var(--bg);
+      background-image: radial-gradient(circle at 50% 0%, rgba(184, 41, 255, 0.08), transparent 60%), radial-gradient(circle at 20% 80%, rgba(0, 255, 204, 0.05), transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.2rem 0.8rem 3rem;
+    }
+    .header { text-align: center; margin-bottom: 1.2rem; }
+    .header h1 {
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #00ffcc, #0099ff, #b829ff, #ff007f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+    .dot.connected { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.15rem;
+      margin-bottom: 0.9rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+    }
+    .badge {
+      font-size: 0.72rem;
+      color: var(--accent);
+      background: rgba(0, 255, 204, 0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 255, 204, 0.25);
+    }
+    .row-btns { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+    .btn {
+      width: 100%;
+      padding: 11px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: linear-gradient(135deg, #00ffcc, #0088ff);
+      color: #050a14;
+      border: none;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+    .btn-active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 255, 204, 0.12);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .btn-mic-active {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: rgba(255, 51, 102, 0.15);
+      box-shadow: 0 0 12px rgba(255, 51, 102, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+
+    /* Tabs */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 0.9rem;
+    }
+    .tab-btn {
+      padding: 8px 2px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tab-btn.active {
+      background: rgba(0, 255, 204, 0.15);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .tab-content { display: none; width: 100%; max-width: 480px; }
+    .tab-content.active { display: block; }
+
+    /* Mega Scenes Grid */
+    .scenes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .scene-card {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: transform 0.15s, border-color 0.2s;
+    }
+    .scene-card:hover { transform: translateY(-2px); border-color: #fff; }
+    .scene-name { font-weight: 700; font-size: 0.86rem; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+    .scene-sub { font-size: 0.68rem; color: rgba(255,255,255,0.85); text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+
+    /* Visualizer Canvas */
+    .visualizer-container {
+      width: 100%;
+      height: 75px;
+      background: #030406;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas { width: 100%; height: 100%; }
+
+    /* Virtual Neon Tube */
+    .neon-tube-preview {
+      display: flex;
+      width: 100%;
+      height: 26px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.2);
+      margin-bottom: 12px;
+      box-shadow: 0 0 18px rgba(0, 255, 204, 0.25);
+    }
+    .neon-seg {
+      flex: 1;
+      height: 100%;
+      cursor: pointer;
+      transition: background 0.2s;
+      border-left: 1px solid rgba(0,0,0,0.25);
+    }
+
+    /* Color & Sliders */
+    .color-row { display: flex; align-items: center; gap: 14px; }
+    .color-picker-wrapper {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
+    }
+    input[type="color"] {
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      cursor: pointer;
+      border: none;
+    }
+    .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+    .color-preset {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.35);
+      cursor: pointer;
+    }
+    .slider-group { margin-top: 0.9rem; }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    select, input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border);
+      color: #fff;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    select option { background: #111420; color: #fff; }
+    .log-box {
+      font-family: monospace;
+      font-size: 0.73rem;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: #8fa6c0;
+      max-height: 90px;
+      overflow-y: auto;
+      width: 100%;
+      direction: ltr;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>NEON RGBIC STUDIO v6</h1>
+    <div class="status-badge">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">غير متصل</span>
+    </div>
+  </div>
+
+  <!-- Connection & Quick Controls -->
+  <div class="card">
+    <div class="row-btns">
+      <button id="btnConnect" class="btn btn-primary" onclick="connectBLE()">🔗 اتصال BLE</button>
+      <button id="btnPower" class="btn btn-active" onclick="togglePower()">⚡ ON/OFF</button>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span>السطوع (Brightness)</span>
+        <span id="brightVal">100%</span>
+      </div>
+      <input type="range" min="1" max="100" value="100" id="brightnessInput" oninput="onBrightnessInput(this.value)">
+    </div>
+
+    <div class="slider-group" style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px; align-items: end;">
+      <div>
+        <div class="slider-header">
+          <span>سرعة الحركة (Speed)</span>
+          <span id="speedVal">80%</span>
+        </div>
+        <input type="range" min="1" max="100" value="80" id="speedInput" oninput="onSpeedInput(this.value)">
+      </div>
+      <button id="btnReverse" class="btn" style="padding: 7px; font-size: 0.78rem;" onclick="toggleReverse()">🔄 عكس</button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <div class="tab-btn active" onclick="switchTab('tabScenes', this)">✨ مشاهد Govee</div>
+    <div class="tab-btn" onclick="switchTab('tabMusic', this)">🎵 تفاعل صوتي</div>
+    <div class="tab-btn" onclick="switchTab('tabEffects', this)">🌈 100+ حركات</div>
+    <div class="tab-btn" onclick="switchTab('tabSegment', this)">🧩 أجزاء</div>
+    <div class="tab-btn" onclick="switchTab('tabColor', this)">🎨 ألوان</div>
+  </div>
+
+  <!-- TAB 1: HUGE GOVEE & MEGA PRO SCENES -->
+  <div id="tabScenes" class="tab-content active">
+    <div class="card">
+      <div class="card-title">
+        <span>مكتبة مشاهد Govee الاحترافية (20+ مشاهد)</span>
+        <span class="badge">Gaming & Ambient</span>
+      </div>
+      <div class="scenes-grid">
+        <div class="scene-card" style="background: linear-gradient(135deg, #ff0055, #00ffcc);" onclick="applyGoveeScene(55, 85, false, 'Rainbow Water')">
+          <span class="scene-name">🌊 موج النيون</span>
+          <span class="scene-sub">تعدد ألوان متدفق</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #7928ca, #ff0080);" onclick="applyGoveeScene(94, 75, false, 'Cyberpunk BPCY')">
+          <span class="scene-name">👾 سايبر بانك 2077</span>
+          <span class="scene-sub">أزرق، بنفسجي، سماوي، أصفر</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #ff4e00, #ec9f05);" onclick="applyGoveeScene(58, 90, false, 'Fire & Matrix')">
+          <span class="scene-name">🔥 لهب البركان</span>
+          <span class="scene-sub">أحمر وأخضر متوهج</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #00c6ff, #0072ff);" onclick="applyGoveeScene(59, 70, true, 'Ocean Wave')">
+          <span class="scene-name">🌌 محيط الأورا</span>
+          <span class="scene-sub">أخضر وأزرق متموج</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #f857a6, #ff5858);" onclick="applyGoveeScene(2, 95, false, 'Symphony Party')">
+          <span class="scene-name">🎵 سيمفوني غيمينغ</span>
+          <span class="scene-sub">نبض متعدد الأجزاء</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #11998e, #38ef7d);" onclick="applyGoveeScene(45, 50, false, 'Rainbow Breathing')">
+          <span class="scene-name">🧘 تنفس نيون هادئ</span>
+          <span class="scene-sub">تدرج خافت مريح للأعصاب</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #8e2de2, #4a00e0);" onclick="applyGoveeScene(76, 88, false, 'Meteor Trail')">
+          <span class="scene-name">☄️ شهاب المجرة</span>
+          <span class="scene-sub">مطاردة أجزاء سريعة</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #fc00ff, #00dbde);" onclick="applyGoveeScene(35, 80, false, 'Portal Open/Close')">
+          <span class="scene-name">🚪 بوابة الطاقة</span>
+          <span class="scene-sub">انقسام وتوهج من المنتصف</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #ff0844, #ffb199);" onclick="applyGoveeScene(92, 90, false, 'BGR Running')">
+          <span class="scene-name">⚡ ركض نيون صاخب</span>
+          <span class="scene-sub">سرعة قصوى BGR</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);" onclick="applyGoveeScene(3, 70, false, 'Colorful Energy')">
+          <span class="scene-name">🔋 طاقة الماتريكس</span>
+          <span class="scene-sub">تدرجات حيوية مفعمة بالحياة</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #000000, #434343);" onclick="applyGoveeScene(54, 60, false, 'White Dark')">
+          <span class="scene-name">☁️ ضباب أبيض</span>
+          <span class="scene-sub">تنفس أبيض نقي</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #8a2be2, #00ffff);" onclick="applyGoveeScene(61, 80, false, 'YC Flow')">
+          <span class="scene-name">⚡ جريان أصفر/سماوي</span>
+          <span class="scene-sub">تدفق مائي ثنائي</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #ff1493, #00bfff);" onclick="applyGoveeScene(93, 85, false, 'PCY Running')">
+          <span class="scene-name">🎮 ركض الألعاب (PCY)</span>
+          <span class="scene-sub">بنفسجي وسماوي وأصفر</span>
+        </div>
+        <div class="scene-card" style="background: linear-gradient(135deg, #ff4500, #800080);" onclick="applyGoveeScene(57, 75, false, 'VY Water')">
+          <span class="scene-name">🌌 جريان بنفسجي/أصفر</span>
+          <span class="scene-sub">مزيج كوني ساحر</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: ADVANCED MUSIC & SOUND FX SYNC -->
+  <div id="tabMusic" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span>أوضاع التفاعل الصوتي الذكي (Sound Reactive Modes)</span>
+        <span class="badge">Govee Music Sync</span>
+      </div>
+      <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">
+        اختر وضع التفاعل الموسيقي المناسب لجوك، وشغل أغنيتك على Spotify أو YouTube:
+      </p>
+
+      <div class="visualizer-container">
+        <canvas id="audioCanvas"></canvas>
+      </div>
+
+      <div class="slider-group" style="margin-top:0; margin-bottom: 12px;">
+        <div class="slider-header"><span>نمط التفاعل (Music Mode):</span></div>
+        <select id="musicModeSelect" style="font-weight:700; color:var(--accent);">
+          <option value="pulse">🎵 نبض عشوائي مع ضربات الباس (Bass Pulse)</option>
+          <option value="chase">🏃 حركات متلاحقة مع الإيقاع (Dynamic Chasing)</option>
+          <option value="strobe">⚡ فلاش ووميض قوي مع السخونة (Party Strobe)</option>
+          <option value="spectrum">🌈 تدرج ألوان الطيف الموسيقي (Rainbow Spectrum)</option>
+        </select>
+      </div>
+
+      <div class="row-btns" style="margin-bottom: 10px;">
+        <button id="btnMicSync" class="btn btn-primary" onclick="toggleMicSync()">🎤 تشغيل تفاعل الميكروفون</button>
+        <button class="btn" onclick="applyGoveeScene(2, 95, false, 'Party Mode')">🎉 وضع الحفلة</button>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span>حساسية الميكروفون (Bass Sensitivity)</span>
+          <span id="micSensVal">75%</span>
+        </div>
+        <input type="range" min="10" max="100" value="75" id="micSensInput" oninput="document.getElementById('micSensVal').textContent = this.value + '%'">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>التحكم الصوتي بالذكاء الاصطناعي (Voice Commands)</span>
+        <span class="badge">عربي / دراجة / إنجليزي</span>
+      </div>
+      <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">
+        كليكي على الزر وقل مثلاً: "شعل النيون"، "سايبر بانك"، "قوس قزح"، "أحمر"، أو "طفي".
+      </p>
+      <button id="btnVoiceCmd" class="btn btn-primary" onclick="startVoiceRecognition()">🎙️ تحدث بالأمر الصوتي</button>
+      <div id="voiceResult" style="margin-top: 8px; font-size: 0.8rem; color: var(--accent); text-align: center; font-family: monospace;"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: 100+ HARDWARE RGBIC EFFECTS -->
+  <div id="tabEffects" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span>مكتبة الحركات الموسعة (100+ تأثير)</span>
+        <span class="badge">مرتبة حسب الفئات</span>
+      </div>
+      <div class="slider-group" style="margin-top:0;">
+        <div class="slider-header"><span>اختر التأثير المطلوب:</span></div>
+        <select id="effectSelect" onchange="onEffectChange(this.value)" size="12" style="height: 260px;">
+          <optgroup label="🌟 حركات أساسية ومهرجان (Basic)">
+            <option value="1">1 - تكرار تلقائي لكل الحركات (Auto Loop)</option>
+            <option value="2">2 - سيمفونية متزامنة (Symphony)</option>
+            <option value="3">3 - طاقة ملونة (Colorful Energy)</option>
+            <option value="4">4 - قفزات ملونة (Colorful Jumps)</option>
+            <option value="7">7 - فلاش قوس قزح (Rainbow Strobe)</option>
+            <option value="9">9 - فلاش أصفر/بنفسجي/أزرق (YPB Strobe)</option>
+            <option value="10">10 - تدرج قوس قزح ناعم (Rainbow Gradient)</option>
+          </optgroup>
+          <optgroup label="🦋 تموج ومسح الأجزاء (Flutter & Brush)">
+            <option value="26">26 - تموج ألوان الطيف (Colorful Fluttering)</option>
+            <option value="27">27 - تموج أحمر/أخضر/أزرق (RGB Fluttering)</option>
+            <option value="28">28 - تموج أصفر/سماوي/بنفسجي (YCP Fluttering)</option>
+            <option value="29">29 - مسح فرشاة الألوان (Colorful Brushing)</option>
+            <option value="30">30 - مسح ثلاثي (RGB Brushing)</option>
+            <option value="31">31 - مسح نيون (YCP Brushing)</option>
+            <option value="32">32 - سحب وإغلاق الأجزاء (Brush Closed Pull)</option>
+          </optgroup>
+          <optgroup label="🚪 فتح وإغلاق من الوسط (Open & Close)">
+            <option value="35">35 - فتح وإغلاق قوس قزح (Rainbow Open/Close)</option>
+            <option value="36">36 - فتح وإغلاق RGB</option>
+            <option value="37">37 - فتح وإغلاق YCP</option>
+            <option value="38">38 - فتح وإغلاق أحمر</option>
+            <option value="39">39 - فتح وإغلاق أخضر</option>
+            <option value="40">40 - فتح وإغلاق أزرق</option>
+            <option value="41">41 - فتح وإغلاق أصفر</option>
+            <option value="42">42 - فتح وإغلاق سماوي</option>
+            <option value="43">43 - فتح وإغلاق بنفسجي</option>
+            <option value="44">44 - فتح وإغلاق أبيض</option>
+          </optgroup>
+          <optgroup label="🌗 تنفس وتدرج الإضاءة (Light/Dark Transition)">
+            <option value="45">45 - تنفس قوس قزح (Rainbow Transition)</option>
+            <option value="46">46 - تنفس RGB</option>
+            <option value="47">47 - تنفس بنفسجي/أخضر/أصفر</option>
+            <option value="48">48 - تنفس أحمر</option>
+            <option value="49">49 - تنفس أخضر</option>
+            <option value="50">50 - تنفس أزرق</option>
+            <option value="51">51 - تنفس سماوي</option>
+            <option value="52">52 - تنفس أصفر</option>
+            <option value="53">53 - تنفس بنفسجي</option>
+            <option value="54">54 - تنفس أبيض</option>
+          </optgroup>
+          <optgroup label="🌊 جريان الماء ثنائي وثلاثي الألوان (Flowing Water)">
+            <option value="55">55 - جريان قوس قزح (Rainbow Flowing Water)</option>
+            <option value="56">56 - جريان RGB</option>
+            <option value="57">57 - جريان بنفسجي وأصفر (VY Water)</option>
+            <option value="58">58 - جريان أحمر وأخضر (RG Water)</option>
+            <option value="59">59 - جريان أخضر وأزرق (GB Water)</option>
+            <option value="60">60 - جريان أصفر وأزرق (YB Water)</option>
+            <option value="61">61 - جريان أصفر وسماوي (YC Water)</option>
+            <option value="62">62 - جريان أخضر وبنفسجي (GP Water)</option>
+          </optgroup>
+          <optgroup label="☄️ الشهاب والأثر المتحرك (Trailing)">
+            <option value="76">76 - شهاب قوس قزح (Rainbow Trailing)</option>
+            <option value="77">77 - شهاب أحمر</option>
+            <option value="78">78 - شهاب أخضر</option>
+            <option value="79">79 - شهاب أزرق</option>
+            <option value="80">80 - شهاب أصفر</option>
+            <option value="81">81 - شهاب سماوي</option>
+            <option value="82">82 - شهاب بنفسجي</option>
+            <option value="83">83 - شهاب أبيض</option>
+          </optgroup>
+          <optgroup label="⚡ ركض ومطاردة الأجزاء (Running Segments)">
+            <option value="91">91 - مطاردة قوس قزح (Rainbow Running)</option>
+            <option value="92">92 - مطاردة أزرق/أخضر/أحمر (BGR Running)</option>
+            <option value="93">93 - مطاردة بنفسجي/سماوي/أصفر (PCY Running)</option>
+            <option value="94">94 - مطاردة رباعية (BPCY Running)</option>
+            <option value="95">95 - مطاردة رباعية 2 (BGCY Running)</option>
+            <option value="84">84 - مطاردة نقطة حمراء</option>
+            <option value="85">85 - مطاردة نقطة خضراء</option>
+            <option value="86">86 - مطاردة نقطة زرقاء</option>
+            <option value="87">87 - مطاردة نقطة صفراء</option>
+            <option value="88">88 - مطاردة نقطة سماوية</option>
+            <option value="89">89 - مطاردة نقطة بنفسجية</option>
+            <option value="90">90 - مطاردة نقطة بيضاء</option>
+          </optgroup>
+          <optgroup label="🔥 تأثيرات إضافية متقدمة ممتدة (Pro Extra IDs 96-120)">
+            <option value="96">96 - وضع متطور إضافي 1</option>
+            <option value="98">98 - وضع متطور إضافي 2</option>
+            <option value="100">100 - وضع حفل إضافي 3</option>
+            <option value="105">105 - وضع ألعاب إضافي 4</option>
+            <option value="110">110 - وضع سايبر متقدم 5</option>
+            <option value="115">115 - وضع استوديو مخصص 6</option>
+            <option value="120">120 - أقصى تأثير للمتحكم 7</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: SEGMENTS, LENGTH & DIY STUDIO -->
+  <div id="tabSegment" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span>1. التحكم في طول وأجزاء النيون (Active Segments)</span>
+        <span class="badge">أمر 0x03</span>
+      </div>
+      <div class="slider-group" style="margin-top:0;">
+        <div class="slider-header">
+          <span>عدد الأجزاء المشتغلة (IC Pixel Count)</span>
+          <span id="lengthVal">60 جزء</span>
+        </div>
+        <input type="range" min="8" max="200" value="60" id="lengthSlider" oninput="document.getElementById('lengthVal').textContent = this.value + ' جزء'" onchange="setStripLength(this.value)">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>2. استوديو التلوين المتعدد (Multi-Color Cycle)</span>
+        <span class="badge">تخصيص الألوان</span>
+      </div>
+      <div class="neon-tube-preview" id="neonSegmentsBar"></div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <input type="color" id="segBrushColor" value="#00ffcc" style="width:42px; height:42px; position:static; border-radius:8px; border:1px solid #fff;">
+        <span style="font-size: 0.8rem; color: var(--text-muted);">اختار لون الفرشاة وكليكي على الأجزاء لتلوينها</span>
+      </div>
+      <div class="row-btns">
+        <button id="btnCustomCycle" class="btn btn-primary" onclick="toggleCustomColorCycle()">▶️ تشغيل تموج ألواني</button>
+        <button class="btn" onclick="sendExperimentalSegmentPacket()">🧪 إرسال مباشر</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: SOLID COLOR & WIRING SETTINGS -->
+  <div id="tabColor" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span>اختيار اللون الثابت وإصلاح الترتيب</span>
+        <span class="badge" id="wiringBadge">نمط: GRB</span>
+      </div>
+      <div class="color-row">
+        <div class="color-picker-wrapper">
+          <input type="color" id="colorInput" value="#ff0000" onchange="onColorChange(this.value)">
+        </div>
+        <div class="presets">
+          <div class="color-preset" style="background:#ff0000" onclick="setPresetColor('#ff0000')"></div>
+          <div class="color-preset" style="background:#00ff00" onclick="setPresetColor('#00ff00')"></div>
+          <div class="color-preset" style="background:#0000ff" onclick="setPresetColor('#0000ff')"></div>
+          <div class="color-preset" style="background:#ffff00" onclick="setPresetColor('#ffff00')"></div>
+          <div class="color-preset" style="background:#00ffff" onclick="setPresetColor('#00ffff')"></div>
+          <div class="color-preset" style="background:#ff00ff" onclick="setPresetColor('#ff00ff')"></div>
+          <div class="color-preset" style="background:#ff6600" onclick="setPresetColor('#ff6600')"></div>
+          <div class="color-preset" style="background:#ffffff" onclick="setPresetColor('#ffffff')"></div>
+        </div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header"><span>تصحيح ترتيب الألوان (RGB Wiring Order)</span></div>
+        <select id="colorOrderSelect" onchange="onWiringOrderChange()">
+          <option value="GRB" selected>GRB (يصلح انعكاس الأحمر والأخضر)</option>
+          <option value="GBR">GBR (تبديل ثلاثي 1)</option>
+          <option value="BRG">BRG (تبديل ثلاثي 2)</option>
+          <option value="RBG">RBG (عكس الأخضر والأزرق)</option>
+          <option value="BGR">BGR (عكس الأحمر والأزرق)</option>
+          <option value="RGB">RGB (الافتراضي)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Box -->
+  <div class="card">
+    <div class="log-box" id="logBox">[Ready] Studio v6 Ultimate Loaded.</div>
+  </div>
+
+  <script>
+    const PREFIX = 0xBC;
+    const SUFFIX = 0x55;
+    const CMD_POWER = 0x01;
+    const CMD_LENGTH = 0x03;
+    const CMD_COLOR = 0x04;
+    const CMD_BRIGHTNESS = 0x05;
+    const CMD_EFFECT = 0x06;
+    const CMD_REVERSE = 0x07;
+    const CMD_SPEED = 0x08;
+
+    let bleDevice = null;
+    let writeChar = null;
+    let isPoweredOn = true;
+    let isReversed = false;
+    let customCycleInterval = null;
+    let segmentColors = ['#ff0055', '#ff6600', '#ffcc00', '#00ffcc', '#0088ff', '#7928ca', '#ff00ff', '#00ffcc'];
+    let currentCycleIdx = 0;
+
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
+    let micStream = null;
+    let isMicSyncActive = false;
+    let audioAnimId = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedOrder = localStorage.getItem('neon_color_order');
+      if (savedOrder) {
+        document.getElementById('colorOrderSelect').value = savedOrder;
+        document.getElementById('wiringBadge').textContent = "نمط: " + savedOrder;
+      }
+      renderSegmentsBar();
+      initCanvas();
+    });
+
+    function switchTab(tabId, btnEl) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btnEl.classList.add('active');
+    }
+
+    function renderSegmentsBar() {
+      const bar = document.getElementById('neonSegmentsBar');
+      bar.innerHTML = '';
+      segmentColors.forEach((col, idx) => {
+        const seg = document.createElement('div');
+        seg.className = 'neon-seg';
+        seg.style.background = col;
+        seg.title = `الجزء ${idx + 1}`;
+        seg.onclick = () => {
+          const brush = document.getElementById('segBrushColor').value;
+          segmentColors[idx] = brush;
+          renderSegmentsBar();
+          onColorChange(brush);
+        };
+        bar.appendChild(seg);
+      });
+    }
+
+    function log(msg) {
+      const box = document.getElementById('logBox');
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      box.innerHTML = `[${time}] ${msg}<br>` + box.innerHTML;
+    }
+
+    function buildPacket(command, args) {
+      const packet = [PREFIX, command, args.length, ...args, SUFFIX];
+      return new Uint8Array(packet);
+    }
+
+    async function sendCommand(packet) {
+      if (!writeChar) return;
+      try {
+        if (writeChar.writeValueWithoutResponse) {
+          await writeChar.writeValueWithoutResponse(packet);
+        } else {
+          await writeChar.writeValue(packet);
+        }
+      } catch (err) {}
+    }
+
+    async function connectBLE() {
+      try {
+        log("Scanning for BLE devices...");
+        bleDevice = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [0xFFF0, 0x2022, 0xFF12]
+        });
+        bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+        const server = await bleDevice.gatt.connect();
+        let targetService = null;
+        try {
+          targetService = await server.getPrimaryService(0xFFF0);
+        } catch {
+          try { targetService = await server.getPrimaryService(0x2022); }
+          catch { targetService = await server.getPrimaryService(0xFF12); }
+        }
+        writeChar = await targetService.getCharacteristic(0xFFF3);
+        document.getElementById('statusDot').classList.add('connected');
+        document.getElementById('statusText').textContent = "متصل: " + (bleDevice.name || "GATT--DEMO");
+        document.getElementById('btnConnect').textContent = "✓ متصل";
+        log("Connected successfully!");
+      } catch (err) {
+        log("Connect failed: " + err.message);
+      }
+    }
+
+    function onDisconnected() {
+      document.getElementById('statusDot').classList.remove('connected');
+      document.getElementById('statusText').textContent = "انقطع الاتصال";
+      document.getElementById('btnConnect').textContent = "🔗 اتصال BLE";
+      writeChar = null;
+      stopCustomCycle();
+      stopMicSync();
+      log("Disconnected.");
+    }
+
+    async function togglePower() {
+      stopCustomCycle();
+      isPoweredOn = !isPoweredOn;
+      const pkt = buildPacket(CMD_POWER, [isPoweredOn ? 1 : 0]);
+      await sendCommand(pkt);
+      document.getElementById('btnPower').classList.toggle('btn-active', isPoweredOn);
+    }
+
+    async function toggleReverse() {
+      isReversed = !isReversed;
+      const pkt = buildPacket(CMD_REVERSE, [isReversed ? 1 : 0]);
+      await sendCommand(pkt);
+      document.getElementById('btnReverse').classList.toggle('btn-active', isReversed);
+    }
+
+    async function setStripLength(count) {
+      const len = parseInt(count);
+      const pkt = buildPacket(CMD_LENGTH, [(len >> 8) & 0xFF, len & 0xFF]);
+      await sendCommand(pkt);
+    }
+
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex.slice(1), 16);
+      return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+    }
+
+    function applyWiringOrder(r, g, b) {
+      const order = document.getElementById('colorOrderSelect').value;
+      switch (order) {
+        case 'GRB': return [g, r, b];
+        case 'GBR': return [g, b, r];
+        case 'BRG': return [b, r, g];
+        case 'RBG': return [r, b, g];
+        case 'BGR': return [b, g, r];
+        default:    return [r, g, b];
+      }
+    }
+
+    function rgbToHs(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s;
+      const d = max - min;
+      s = max === 0 ? 0 : d / max;
+      if (max === min) {
+        h = 0;
+      } else {
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return [Math.round(h * 360), s * 100];
+    }
+
+    async function onColorChange(hexColor) {
+      const [rawR, rawG, rawB] = hexToRgb(hexColor);
+      const [r, g, b] = applyWiringOrder(rawR, rawG, rawB);
+      const [hue, sat] = rgbToHs(r, g, b);
+      const pkt = buildPacket(CMD_COLOR, [(hue >> 8) & 0xFF, hue & 0xFF, (Math.round(sat * 10) >> 8) & 0xFF, Math.round(sat * 10) & 0xFF, 0x00, 0x00]);
+      await sendCommand(pkt);
+    }
+
+    function onWiringOrderChange() {
+      const order = document.getElementById('colorOrderSelect').value;
+      localStorage.setItem('neon_color_order', order);
+      document.getElementById('wiringBadge').textContent = "نمط: " + order;
+      onColorChange(document.getElementById('colorInput').value);
+    }
+
+    function setPresetColor(hex) {
+      stopCustomCycle();
+      document.getElementById('colorInput').value = hex;
+      onColorChange(hex);
+    }
+
+    async function onBrightnessInput(val) {
+      document.getElementById('brightVal').textContent = val + "%";
+      const bInt = Math.round(1024 * (val / 100));
+      const pkt = buildPacket(CMD_BRIGHTNESS, [(bInt >> 8) & 0xFF, bInt & 0xFF, 0x00, 0x00, 0x00, 0x00]);
+      await sendCommand(pkt);
+    }
+
+    async function onSpeedInput(val) {
+      document.getElementById('speedVal').textContent = val + "%";
+      const pkt = buildPacket(CMD_SPEED, [parseInt(val)]);
+      await sendCommand(pkt);
+    }
+
+    async function onEffectChange(effectVal) {
+      stopCustomCycle();
+      if (!effectVal || effectVal === 'none') return;
+      const eff = parseInt(effectVal);
+      const pkt = buildPacket(CMD_EFFECT, [(eff >> 8) & 0xFF, eff & 0xFF]);
+      await sendCommand(pkt);
+      log(`تفعيل التأثير رقم: ${eff}`);
+    }
+
+    async function applyGoveeScene(effectId, speed, reverse, name) {
+      stopCustomCycle();
+      log(`Scene: ${name}`);
+      await onEffectChange(effectId);
+      setTimeout(async () => {
+        document.getElementById('speedInput').value = speed;
+        await onSpeedInput(speed);
+      }, 100);
+      setTimeout(async () => {
+        isReversed = reverse;
+        document.getElementById('btnReverse').classList.toggle('btn-active', isReversed);
+        await sendCommand(buildPacket(CMD_REVERSE, [isReversed ? 1 : 0]));
+      }, 200);
+    }
+
+    function stopCustomCycle() {
+      if (customCycleInterval) {
+        clearInterval(customCycleInterval);
+        customCycleInterval = null;
+        document.getElementById('btnCustomCycle').textContent = "▶️ تشغيل تموج ألواني";
+      }
+    }
+
+    function toggleCustomColorCycle() {
+      if (customCycleInterval) {
+        stopCustomCycle();
+        return;
+      }
+      document.getElementById('btnCustomCycle').textContent = "⏸️ إيقاف التموج";
+      const speedSlider = parseInt(document.getElementById('speedInput').value);
+      const intervalMs = Math.max(250, 1500 - (speedSlider * 12));
+      customCycleInterval = setInterval(() => {
+        const col = segmentColors[currentCycleIdx % segmentColors.length];
+        onColorChange(col);
+        currentCycleIdx++;
+      }, intervalMs);
+    }
+
+    async function sendExperimentalSegmentPacket() {
+      const args = [];
+      for (let i = 0; i < 4; i++) {
+        const [rawR, rawG, rawB] = hexToRgb(segmentColors[i]);
+        const [r, g, b] = applyWiringOrder(rawR, rawG, rawB);
+        const [hue, sat] = rgbToHs(r, g, b);
+        args.push((hue >> 8) & 0xFF, hue & 0xFF);
+      }
+      await sendCommand(buildPacket(0x09, args));
+    }
+
+    function initCanvas() {
+      const canvas = document.getElementById('audioCanvas');
+      canvas.width = canvas.offsetWidth || 300;
+      canvas.height = canvas.offsetHeight || 75;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#030406';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    async function toggleMicSync() {
+      if (isMicSyncActive) {
+        stopMicSync();
+        return;
+      }
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        microphone = audioContext.createMediaStreamSource(micStream);
+        microphone.connect(analyser);
+        analyser.fftSize = 64;
+        
+        isMicSyncActive = true;
+        document.getElementById('btnMicSync').textContent = "⏹️ إيقاف التفاعل الصوتي";
+        document.getElementById('btnMicSync').className = "btn btn-mic-active";
+        log("Advanced Sound Sync active. Play music!");
+        visualizeAudio();
+      } catch (err) {
+        alert("يرجى السماح بالوصول إلى الميكروفون.");
+      }
+    }
+
+    function stopMicSync() {
+      isMicSyncActive = false;
+      if (audioAnimId) cancelAnimationFrame(audioAnimId);
+      if (micStream) micStream.getTracks().forEach(t => t.stop());
+      if (audioContext && audioContext.state !== 'closed') audioContext.close();
+      document.getElementById('btnMicSync').textContent = "🎤 تشغيل تفاعل الميكروفون";
+      document.getElementById('btnMicSync').className = "btn btn-primary";
+      initCanvas();
+    }
+
+    function visualizeAudio() {
+      const canvas = document.getElementById('audioCanvas');
+      const ctx = canvas.getContext('2d');
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      let lastSendTime = 0;
+      let spectrumHue = 0;
+
+      function renderFrame() {
+        if (!isMicSyncActive) return;
+        audioAnimId = requestAnimationFrame(renderFrame);
+        analyser.getByteFrequencyData(dataArray);
+
+        ctx.fillStyle = '#030406';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / bufferLength) * 2.5;
+        let x = 0;
+        let sum = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const barHeight = dataArray[i];
+          sum += barHeight;
+          ctx.fillStyle = `rgb(${barHeight + 50}, 255, 204)`;
+          ctx.fillRect(x, canvas.height - (barHeight / 2.5), barWidth, barHeight / 2.5);
+          x += barWidth + 1;
+        }
+
+        const avg = sum / bufferLength;
+        const sensitivity = parseInt(document.getElementById('micSensInput').value) / 75;
+        const mode = document.getElementById('musicModeSelect').value;
+        const now = Date.now();
+
+        if (avg * sensitivity > 90 && (now - lastSendTime > 65)) {
+          lastSendTime = now;
+          if (mode === 'pulse') {
+            const randomHue = Math.floor(Math.random() * 360);
+            sendCommand(buildPacket(CMD_COLOR, [(randomHue >> 8) & 0xFF, randomHue & 0xFF, 0x03, 0xE8, 0x00, 0x00]));
+          } else if (mode === 'chase') {
+            const effectsList = [55, 58, 59, 76, 94];
+            const eff = effectsList[Math.floor(Math.random() * effectsList.length)];
+            sendCommand(buildPacket(CMD_EFFECT, [(eff >> 8) & 0xFF, eff & 0xFF]));
+          } else if (mode === 'strobe') {
+            sendCommand(buildPacket(CMD_EFFECT, [0, 7])); // Rainbow Strobe
+          } else if (mode === 'spectrum') {
+            spectrumHue = (spectrumHue + 45) % 360;
+            sendCommand(buildPacket(CMD_COLOR, [(spectrumHue >> 8) & 0xFF, spectrumHue & 0xFF, 0x03, 0xE8, 0x00, 0x00]));
+          }
+        }
+      }
+      renderFrame();
+    }
+
+    function startVoiceRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("متصفحك لا يدعم التعرف الصوتي المباشر.");
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ar-MA';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      document.getElementById('voiceResult').textContent = "جاري الاستماع...";
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript.toLowerCase();
+        document.getElementById('voiceResult').textContent = `النتيجة: "${text}"`;
+        if (text.includes('شعل') || text.includes('تشغيل')) togglePower();
+        else if (text.includes('طفي') || text.includes('إطفاء')) togglePower();
+        else if (text.includes('أحمر')) setPresetColor('#ff0000');
+        else if (text.includes('أخضر')) setPresetColor('#00ff00');
+        else if (text.includes('أزرق')) setPresetColor('#0000ff');
+        else if (text.includes('أصفر')) setPresetColor('#ffff00');
+        else if (text.includes('سايبر')) applyGoveeScene(94, 75, false, 'Cyberpunk');
+        else if (text.includes('قوس قزح')) applyGoveeScene(55, 85, false, 'Rainbow Water');
+        else if (text.includes('لهب') || text.includes('بركان')) applyGoveeScene(58, 90, false, 'Fire & Matrix');
+      };
+      recognition.start();
+    }
+  </script>
+</body>
+</html>
